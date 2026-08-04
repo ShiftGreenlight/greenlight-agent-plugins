@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "greenlight": {
+      "type": "http",
+      "url": "https://dev-gcp.greenlight.shifthq.ai/mcp",
+      "alwaysLoad": true
+    }
+  }
+}
