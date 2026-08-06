@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "greenlight": {
-      "url": "https://dev-gcp.greenlight.shifthq.ai/mcp"
+      "url": "https://t1252-proof.greenlight.shifthq.ai/mcp"
     }
   }
 }
