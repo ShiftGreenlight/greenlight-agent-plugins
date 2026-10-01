@@ -2,7 +2,7 @@
   "mcpServers": {
     "greenlight": {
       "type": "http",
-      "url": "https://t1252-proof.greenlight.shifthq.ai/mcp",
+      "url": "https://dev-ptr.greenlight.shifthq.ai/mcp",
       "alwaysLoad": true
     }
   }

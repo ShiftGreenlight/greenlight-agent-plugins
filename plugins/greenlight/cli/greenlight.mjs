@@ -406,11 +406,11 @@ var require_codegen = __commonJS({
         const rhs = this.rhs === void 0 ? "" : ` = ${this.rhs}`;
         return `${varKind} ${this.name}${rhs};` + _n;
       }
-      optimizeNames(names, constants) {
+      optimizeNames(names, constants2) {
         if (!names[this.name.str])
           return;
         if (this.rhs)
-          this.rhs = optimizeExpr(this.rhs, names, constants);
+          this.rhs = optimizeExpr(this.rhs, names, constants2);
         return this;
       }
       get names() {
@@ -427,10 +427,10 @@ var require_codegen = __commonJS({
       render({ _n }) {
         return `${this.lhs} = ${this.rhs};` + _n;
       }
-      optimizeNames(names, constants) {
+      optimizeNames(names, constants2) {
         if (this.lhs instanceof code_1.Name && !names[this.lhs.str] && !this.sideEffects)
           return;
-        this.rhs = optimizeExpr(this.rhs, names, constants);
+        this.rhs = optimizeExpr(this.rhs, names, constants2);
         return this;
       }
       get names() {
@@ -491,8 +491,8 @@ var require_codegen = __commonJS({
       optimizeNodes() {
         return `${this.code}` ? this : void 0;
       }
-      optimizeNames(names, constants) {
-        this.code = optimizeExpr(this.code, names, constants);
+      optimizeNames(names, constants2) {
+        this.code = optimizeExpr(this.code, names, constants2);
         return this;
       }
       get names() {
@@ -521,12 +521,12 @@ var require_codegen = __commonJS({
         }
         return nodes.length > 0 ? this : void 0;
       }
-      optimizeNames(names, constants) {
+      optimizeNames(names, constants2) {
         const { nodes } = this;
         let i = nodes.length;
         while (i--) {
           const n = nodes[i];
-          if (n.optimizeNames(names, constants))
+          if (n.optimizeNames(names, constants2))
             continue;
           subtractNames(names, n.names);
           nodes.splice(i, 1);
@@ -579,12 +579,12 @@ var require_codegen = __commonJS({
           return void 0;
         return this;
       }
-      optimizeNames(names, constants) {
+      optimizeNames(names, constants2) {
         var _a;
-        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants);
-        if (!(super.optimizeNames(names, constants) || this.else))
+        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants2);
+        if (!(super.optimizeNames(names, constants2) || this.else))
           return;
-        this.condition = optimizeExpr(this.condition, names, constants);
+        this.condition = optimizeExpr(this.condition, names, constants2);
         return this;
       }
       get names() {
@@ -607,10 +607,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.iteration})` + super.render(opts);
       }
-      optimizeNames(names, constants) {
-        if (!super.optimizeNames(names, constants))
+      optimizeNames(names, constants2) {
+        if (!super.optimizeNames(names, constants2))
           return;
-        this.iteration = optimizeExpr(this.iteration, names, constants);
+        this.iteration = optimizeExpr(this.iteration, names, constants2);
         return this;
       }
       get names() {
@@ -646,10 +646,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.varKind} ${this.name} ${this.loop} ${this.iterable})` + super.render(opts);
       }
-      optimizeNames(names, constants) {
-        if (!super.optimizeNames(names, constants))
+      optimizeNames(names, constants2) {
+        if (!super.optimizeNames(names, constants2))
           return;
-        this.iterable = optimizeExpr(this.iterable, names, constants);
+        this.iterable = optimizeExpr(this.iterable, names, constants2);
         return this;
       }
       get names() {
@@ -691,11 +691,11 @@ var require_codegen = __commonJS({
         (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNodes();
         return this;
       }
-      optimizeNames(names, constants) {
+      optimizeNames(names, constants2) {
         var _a, _b;
-        super.optimizeNames(names, constants);
-        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants);
-        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants);
+        super.optimizeNames(names, constants2);
+        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants2);
+        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants2);
         return this;
       }
       get names() {
@@ -996,7 +996,7 @@ var require_codegen = __commonJS({
     function addExprNames(names, from) {
       return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
     }
-    function optimizeExpr(expr, names, constants) {
+    function optimizeExpr(expr, names, constants2) {
       if (expr instanceof code_1.Name)
         return replaceName(expr);
       if (!canOptimize(expr))
@@ -1011,14 +1011,14 @@ var require_codegen = __commonJS({
         return items;
       }, []));
       function replaceName(n) {
-        const c = constants[n.str];
+        const c = constants2[n.str];
         if (c === void 0 || names[n.str] !== 1)
           return n;
         delete names[n.str];
         return c;
       }
       function canOptimize(e) {
-        return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants[c.str] !== void 0);
+        return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants2[c.str] !== void 0);
       }
     }
     function subtractNames(names, from) {
@@ -6898,16 +6898,8 @@ var CliError = class extends Error {
   /** Optional `details` for the error envelope (e.g. the offending field). */
   details;
 };
-var notSignedInError = () => new CliError(
-  "Not signed in. Run `greenlight login` (or `greenlight pair`).",
-  "auth.not_signed_in",
-  3
-);
-var sessionExpiredError = () => new CliError(
-  "Session expired or revoked. Run `greenlight login` (or `greenlight pair`).",
-  "auth.session_expired",
-  3
-);
+var notSignedInError = () => new CliError("Not signed in. Run `greenlight login`.", "auth.not_signed_in", 3);
+var sessionExpiredError = () => new CliError("Session expired or revoked. Run `greenlight login`.", "auth.session_expired", 3);
 var forbiddenError = (message2) => new CliError(message2, "auth.forbidden", 3);
 
 // packages/cli/src/cli/args.ts
@@ -15784,8 +15776,8 @@ function removeKeychainEntry(account) {
 }
 function readFileEntry(path, apiBase) {
   try {
-    const store2 = JSON.parse(readFileSync(path, "utf8"));
-    return store2[apiBase];
+    const store3 = JSON.parse(readFileSync(path, "utf8"));
+    return store3[apiBase];
   } catch {
     return void 0;
   }
@@ -15793,18 +15785,18 @@ function readFileEntry(path, apiBase) {
 function writeFileEntry(path, apiBase, value) {
   mkdirSync(dirname(path), { recursive: true, mode: 448 });
   withFileLock(`${path}.lock`, () => {
-    const store2 = readStore(path);
-    store2[apiBase] = value;
-    atomicWrite(path, JSON.stringify(store2));
+    const store3 = readStore(path);
+    store3[apiBase] = value;
+    atomicWrite(path, JSON.stringify(store3));
   });
 }
 function removeFileEntry(path, apiBase) {
   if (!existsSync(path)) return;
   withFileLock(`${path}.lock`, () => {
-    const store2 = readStore(path);
-    if (apiBase in store2) {
-      delete store2[apiBase];
-      atomicWrite(path, JSON.stringify(store2));
+    const store3 = readStore(path);
+    if (apiBase in store3) {
+      delete store3[apiBase];
+      atomicWrite(path, JSON.stringify(store3));
     }
   });
 }
@@ -15826,17 +15818,17 @@ function atomicWrite(path, data) {
   }
   renameSync(tmp, path);
 }
-function withFileLock(lockPath, fn) {
+function withFileLock(lockPath2, fn) {
   const start = Date.now();
   for (; ; ) {
     try {
-      closeSync(openSync(lockPath, "wx"));
+      closeSync(openSync(lockPath2, "wx"));
       break;
     } catch (err) {
       if (err.code !== "EEXIST") throw err;
       if (Date.now() - start > LOCK_TIMEOUT_MS) {
         try {
-          unlinkSync(lockPath);
+          unlinkSync(lockPath2);
         } catch {
         }
       } else {
@@ -15848,7 +15840,7 @@ function withFileLock(lockPath, fn) {
     return fn();
   } finally {
     try {
-      unlinkSync(lockPath);
+      unlinkSync(lockPath2);
     } catch {
     }
   }
@@ -16113,37 +16105,67 @@ import { readFileSync as readFileSync3 } from "node:fs";
 // packages/cli/src/cli/payload.ts
 import { readFileSync as readFileSync2 } from "node:fs";
 var PAYLOAD_FILE_FIELD = "__payload_file";
+var STDIN_FILE = "-";
+var DEFAULT_STDIN_TIMEOUT_MS = 1e4;
 function payloadFileField() {
   return PAYLOAD_FILE_FIELD;
 }
 async function resolvePayload(parsed, spec, deps = {}) {
   const file = parsed[PAYLOAD_FILE_FIELD];
+  if (file === STDIN_FILE) {
+    return payloadValue(spec, stripOneTrailingNewline(await readStdin(deps)));
+  }
   if (typeof file === "string") {
     try {
-      const value2 = (deps.readFile ?? defaultReadFile)(file);
-      if (spec.required && value2 === "") throw payloadEmptyError(spec);
-      return { [spec.field]: value2 };
+      const value = (deps.readFile ?? defaultReadFile)(file);
+      if (spec.required && value === "") throw payloadEmptyError(spec);
+      return { [spec.field]: value };
     } catch (err) {
       if (err instanceof CliError) throw err;
       throw payloadReadError(spec, err);
     }
   }
-  const stdinIsTTY = (deps.stdinIsTTY ?? defaultStdinIsTTY)();
-  if (stdinIsTTY) {
-    if (!spec.required) return {};
-    const name = spec.displayName ?? spec.field;
-    const err = new CliError(
-      `Pipe ${name} to stdin or use --${spec.fileFlag} <path>.`,
-      "validation.body_invalid",
-      2
-    );
-    err.details = { field: spec.field };
-    throw err;
+  if (!spec.required) return {};
+  if ((deps.stdinIsTTY ?? defaultStdinIsTTY)()) throw payloadMissingError(spec);
+  const timeoutMs = deps.stdinTimeoutMs ?? DEFAULT_STDIN_TIMEOUT_MS;
+  let timer;
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(payloadTimeoutError(spec, timeoutMs)), timeoutMs);
+  });
+  try {
+    const raw = await Promise.race([readStdin(deps), deadline]);
+    return payloadValue(spec, stripOneTrailingNewline(raw));
+  } finally {
+    clearTimeout(timer);
   }
-  const value = stripOneTrailingNewline(await (deps.readStdin ?? defaultReadStdin)());
-  if (spec.required && value === "") throw payloadEmptyError(spec);
-  if (!spec.required && value === "") return {};
-  return { [spec.field]: value };
+}
+function readStdin(deps) {
+  return (deps.readStdin ?? defaultReadStdin)();
+}
+function payloadValue(spec, value) {
+  if (value !== "") return { [spec.field]: value };
+  if (spec.required) throw payloadEmptyError(spec);
+  return {};
+}
+function payloadMissingError(spec) {
+  const name = spec.displayName ?? spec.field;
+  const err = new CliError(
+    `Pipe ${name} to stdin or use --${spec.fileFlag} <path>.`,
+    "validation.body_invalid",
+    2
+  );
+  err.details = { field: spec.field };
+  return err;
+}
+function payloadTimeoutError(spec, timeoutMs) {
+  const name = spec.displayName ?? spec.field;
+  const err = new CliError(
+    `No ${name} reached EOF on stdin within ${timeoutMs / 1e3}s. Pipe ${name} to stdin and close it, or use --${spec.fileFlag} <path> (--${spec.fileFlag} - waits for stdin).`,
+    "validation.body_invalid",
+    2
+  );
+  err.details = { field: spec.field };
+  return err;
 }
 function payloadEmptyError(spec) {
   const name = spec.displayName ?? spec.field;
@@ -16182,6 +16204,12 @@ function stripOneTrailingNewline(value) {
 
 // packages/cli/src/commands/curl.ts
 var HEADERS_FILE_FIELD = "__headers_file";
+var CURL_PAYLOAD = {
+  field: "body",
+  fileFlag: "body-file",
+  required: false,
+  describe: "HTTP request body."
+};
 var CURL_FLAGS = {
   app: {
     field: "app_id",
@@ -16211,7 +16239,7 @@ var CURL_FLAGS = {
   "body-file": {
     field: payloadFileField(),
     type: "string",
-    describe: "Read the optional request body from a file or fd; otherwise stdin."
+    describe: "Read the optional request body from a file or fd; `-` reads stdin."
   },
   "follow-redirects": {
     field: "follow_redirects",
@@ -16232,19 +16260,7 @@ async function cmdCurl(apiBase, args, global, deps = {}) {
   if (typeof headersFile === "string") {
     input["headers"] = readHeaders(headersFile, deps.readHeadersFile);
   }
-  Object.assign(
-    input,
-    await resolvePayload(
-      parsed,
-      {
-        field: "body",
-        fileFlag: "body-file",
-        required: false,
-        describe: "HTTP request body."
-      },
-      deps
-    )
-  );
+  Object.assign(input, await resolvePayload(parsed, CURL_PAYLOAD, deps));
   delete input[payloadFileField()];
   const result = await callTool(apiBase, "curlApp", input, { debug: global.debug });
   emit(result.structuredContent);
@@ -16467,10 +16483,11 @@ var GROUP_POLL_MS = 50;
 var INTEGRATION_LABEL = {
   live_raw: "live (raw, injected)",
   live_proxy: "live (proxy token)",
-  fixtures_user_delegated: "fixtures (user-delegated)"
+  fixtures_user_delegated: "fixtures (user-delegated)",
+  denied_group_requirement: "denied (not in a required group)"
 };
 var RESOURCE_LABEL = {
-  live_sas: "live (short-TTL SAS)",
+  live_proxy: "live (proxy token)",
   fixtures_inspect: "fixtures + inspectAppDb",
   pending: "pending (provisioning)"
 };
@@ -16557,40 +16574,6 @@ function spawnChild(devCommand, contract) {
   const [cmd, ...args] = devCommand;
   if (cmd === void 0) throw new CliError("Usage: greenlight run -- <command> [args\u2026]");
   const posix = process.platform !== "win32";
-  const child = spawn(cmd, args, {
-    stdio: "inherit",
-    env: { ...process.env, ...contract.env },
-    shell: !posix,
-    // POSIX: the child leads its own process group, so termination reaches its
-    // whole tree (`npm run dev` → node), not just the direct child.
-    detached: posix
-  });
-  const shownCmd = cmd.replace(new RegExp("\\p{Cc}", "gu"), " ");
-  child.on("spawn", () => {
-    process.stderr.write(`[greenlight] ready \u2014 \`${shownCmd}\` is running (pid ${child.pid}).
-`);
-  });
-  const killTree = (sig) => {
-    if (child.pid === void 0) return;
-    if (posix) {
-      try {
-        process.kill(-child.pid, sig);
-        return;
-      } catch {
-      }
-    }
-    child.kill(sig);
-  };
-  const groupAlive = () => {
-    if (!posix || child.pid === void 0) return false;
-    try {
-      process.kill(-child.pid, 0);
-      return true;
-    } catch (err) {
-      return err.code === "EPERM";
-    }
-  };
-  const restartTimer = scheduleExpiryNotice(contract.expires_at, () => child.killed === false);
   return new Promise((resolvePromise, reject) => {
     let settled = false;
     let terminating = false;
@@ -16598,6 +16581,7 @@ function spawnChild(devCommand, contract) {
     let pendingExit;
     let escalation;
     let groupPoll;
+    let restartTimer = null;
     const settle = (result) => {
       if (settled) return;
       settled = true;
@@ -16618,6 +16602,26 @@ function spawnChild(devCommand, contract) {
     const onSigterm = forward("SIGTERM");
     process.on("SIGINT", onSigint);
     process.on("SIGTERM", onSigterm);
+    let child;
+    try {
+      child = spawn(cmd, args, {
+        stdio: "inherit",
+        env: { ...process.env, ...contract.env },
+        shell: !posix,
+        // POSIX: the child leads its own process group, so termination reaches its
+        // whole tree (`npm run dev` → node), not just the direct child.
+        detached: posix
+      });
+    } catch (err) {
+      cleanup();
+      throw err;
+    }
+    restartTimer = scheduleExpiryNotice(contract.expires_at, () => child.killed === false);
+    const shownCmd = cmd.replace(new RegExp("\\p{Cc}", "gu"), " ");
+    child.on("spawn", () => {
+      process.stderr.write(`[greenlight] ready \u2014 \`${shownCmd}\` is running (pid ${child.pid}).
+`);
+    });
     child.on("error", (err) => {
       if (settled) return;
       settled = true;
@@ -16638,6 +16642,26 @@ function spawnChild(devCommand, contract) {
       }
       settle(result);
     });
+    function killTree(sig) {
+      if (child.pid === void 0) return;
+      if (posix) {
+        try {
+          process.kill(-child.pid, sig);
+          return;
+        } catch {
+        }
+      }
+      child.kill(sig);
+    }
+    function groupAlive() {
+      if (!posix || child.pid === void 0) return false;
+      try {
+        process.kill(-child.pid, 0);
+        return true;
+      } catch (err) {
+        return err.code === "EPERM";
+      }
+    }
     function cleanup() {
       if (restartTimer) clearTimeout(restartTimer);
       if (escalation) clearTimeout(escalation);
@@ -16712,7 +16736,8 @@ async function cmdRun(apiBase, opts, devCommand) {
   const res = await jsonRequest("POST", `${apiBase}/api/cli/run-context`, { token, body });
   ensureOk(res, "Could not resolve the run contract");
   const contract = parseRunContract(res.body);
-  if ((contract.integrations ?? []).some((i) => i.local === "live_proxy")) {
+  const needsProxyToken = (contract.integrations ?? []).some((i) => i.local === "live_proxy") || (contract.resources ?? []).some((r) => r.kind === "blob" && r.local !== "pending");
+  if (needsProxyToken) {
     const minted = await jsonRequest("POST", `${apiBase}/api/cli/proxy-token`, { token, body });
     ensureOk(minted, "Could not mint the local proxy token");
     const dataKey = readString(minted.body, "data_key");
@@ -16741,8 +16766,147 @@ async function cmdRun(apiBase, opts, devCommand) {
   return spawnChild(devCommand, contract);
 }
 
+// packages/cli/src/commands/knowledge-asset.ts
+import { createHash as createHash2 } from "node:crypto";
+import { lstatSync, mkdirSync as mkdirSync2, unlinkSync as unlinkSync2, writeFileSync } from "node:fs";
+import { dirname as dirname3 } from "node:path";
+var KNOWLEDGE_ASSET_GET_FLAGS = {
+  id: {
+    field: "id",
+    type: "string",
+    format: "uuid",
+    describe: "Asset id (from `knowledge asset list`)."
+  },
+  out: {
+    field: "__out",
+    type: "string",
+    required: true,
+    describe: "Path to write the file to. Parent directories are created."
+  },
+  integration: {
+    field: "integration",
+    type: "string",
+    describe: "Integration slug; required when the address scope is `integration`."
+  },
+  app: {
+    field: "app_id",
+    type: "string",
+    format: "uuid",
+    describe: "App id; required when the address scope is `app`."
+  }
+};
+function splitAddressArgv(argv, specs) {
+  const rest = [];
+  let address;
+  for (let i = 0; i < argv.length; i += 1) {
+    const token = argv[i];
+    if (token.startsWith("--")) {
+      rest.push(token);
+      const spec = specs[token.slice(2)];
+      if (spec && spec.type !== "boolean" && argv[i + 1] !== void 0) {
+        rest.push(argv[i + 1]);
+        i += 1;
+      }
+      continue;
+    }
+    if (address === void 0) address = token;
+    else rest.push(token);
+  }
+  return address === void 0 ? { rest } : { address, rest };
+}
+async function cmdKnowledgeAssetGet(apiBase, argv, global) {
+  const { address: positional, rest } = splitAddressArgv(argv, KNOWLEDGE_ASSET_GET_FLAGS);
+  const flags = parseFlags(rest, KNOWLEDGE_ASSET_GET_FLAGS);
+  const outPath = flags["__out"];
+  const args = {};
+  if (positional) {
+    const parts = positional.split("/");
+    if (parts.length !== 3) {
+      throw new CliError(
+        `Address must be <scope>/<topic>/<slug>, got '${positional}'.`,
+        "validation.body_invalid",
+        2
+      );
+    }
+    const [scope, topic, slug] = parts;
+    Object.assign(args, { scope, topic, slug });
+    if (flags["integration"] !== void 0) args["integration"] = flags["integration"];
+    if (flags["app_id"] !== void 0) args["app_id"] = flags["app_id"];
+  } else if (flags["id"]) {
+    args["id"] = flags["id"];
+  } else {
+    throw new CliError("Provide <scope>/<topic>/<slug> or --id.", "validation.body_invalid", 2);
+  }
+  const result = await callTool(apiBase, "knowledgeAssetGet", args, { debug: global.debug });
+  if (result.isError) {
+    emit(result.structuredContent);
+    return exitCodeForToolError(result.structuredContent);
+  }
+  const asset = readAssetResult(result.structuredContent);
+  const response = await fetch(asset.download_url);
+  if (!response.ok) {
+    throw new CliError(
+      `Download failed with HTTP ${response.status}. The URL may have expired \u2014 re-run to mint a fresh one.`,
+      "knowledge.asset_download_failed",
+      1
+    );
+  }
+  const bytes = Buffer.from(await response.arrayBuffer());
+  const actual = createHash2("sha256").update(bytes).digest("hex");
+  if (actual !== asset.checksum_sha256) {
+    throw new CliError(
+      `Checksum mismatch: expected ${asset.checksum_sha256}, got ${actual}. Nothing was written.`,
+      "knowledge.asset_checksum_mismatch",
+      1
+    );
+  }
+  mkdirSync2(dirname3(outPath), { recursive: true });
+  try {
+    const existing = lstatSync(outPath, { throwIfNoEntry: false });
+    if (existing?.isSymbolicLink()) unlinkSync2(outPath);
+    writeFileSync(outPath, bytes);
+  } catch (err) {
+    throw new CliError(
+      `Could not write ${outPath}: ${err instanceof Error ? err.message : String(err)}`,
+      "knowledge.asset_write_failed",
+      1
+    );
+  }
+  emit({ path: outPath, filename: asset.filename, byte_size: bytes.byteLength, verified: true });
+  return 0;
+}
+function readAssetResult(content) {
+  const malformed = () => {
+    throw new CliError(
+      "knowledgeAssetGet returned an unexpected payload.",
+      "knowledge.asset_response_invalid",
+      1
+    );
+  };
+  if (typeof content !== "object" || content === null) return malformed();
+  const c = content;
+  if (typeof c["download_url"] !== "string" || c["download_url"] === "") return malformed();
+  if (typeof c["checksum_sha256"] !== "string" || c["checksum_sha256"] === "") return malformed();
+  return {
+    download_url: c["download_url"],
+    checksum_sha256: c["checksum_sha256"],
+    filename: typeof c["filename"] === "string" ? c["filename"] : "asset",
+    byte_size: typeof c["byte_size"] === "number" ? c["byte_size"] : 0
+  };
+}
+
 // packages/cli/src/cli/registry.ts
 var KNOWLEDGE_SCOPES = ["org", "integration", "app"];
+var KNOWLEDGE_ASSET_ROLES = [
+  "logo-primary",
+  "logo-mark",
+  "logo-wordmark",
+  "icon",
+  "favicon",
+  "illustration",
+  "diagram",
+  "other"
+];
 var FEEDBACK_CATEGORIES = ["bug", "friction", "suggestion", "other"];
 var limit = { field: "limit", type: "number", describe: "Page size." };
 var cursor = { field: "cursor", type: "string", describe: "Opaque page cursor." };
@@ -16770,11 +16934,6 @@ var userEmailRequired = {
   type: "string",
   required: true,
   describe: "Target user's email."
-};
-var slugOptional = {
-  field: "slug",
-  type: "string",
-  describe: "App slug (alternative to --app)."
 };
 var skillShowSpec = {
   tool: "getBuilderSkill",
@@ -16837,20 +16996,6 @@ var MCP_COMMANDS = {
       }
     }
   },
-  "apps request-access": {
-    tool: "requestAppAccess",
-    summary: "Request your own access to an app found via `apps discover`.",
-    flags: {
-      app: appOptional,
-      slug: slugOptional,
-      reason: {
-        field: "reason",
-        type: "string",
-        describe: "Why you need it \u2014 shown to the owner."
-      }
-    },
-    validate: validateAppIdentifier
-  },
   "integrations list": {
     tool: "listGrantableIntegrations",
     summary: "List integrations grantable to an app or requestable personally.",
@@ -16881,6 +17026,26 @@ var MCP_COMMANDS = {
         describe: "Credential slug on that integration."
       },
       reason: { field: "reason", type: "string", describe: "Why you need it \u2014 shown to IT." }
+    }
+  },
+  // The connection-request twin of `request`. Separate verb, because asking for a
+  // system the org has not connected is a different (and higher-privilege) ask than
+  // requesting access to one it already has — and this one is never auto-approved.
+  "integrations connect": {
+    tool: "requestIntegrationConnection",
+    summary: "Ask IT to connect a catalogued system this org has not connected yet.",
+    flags: {
+      key: {
+        field: "catalog_key",
+        type: "string",
+        required: true,
+        describe: "Catalog key of the system to connect."
+      },
+      reason: {
+        field: "reason",
+        type: "string",
+        describe: "Why it is needed \u2014 shown to IT. Never include a credential."
+      }
     }
   },
   "env list": {
@@ -17045,6 +17210,36 @@ var MCP_COMMANDS = {
     },
     validate: validateKnowledgeGet
   },
+  "knowledge asset list": {
+    tool: "knowledgeAssetList",
+    summary: "List attached images \u2014 the org's real logo, icon, wordmark, favicon.",
+    flags: {
+      scope: {
+        field: "scope",
+        type: "enum",
+        enumValues: KNOWLEDGE_SCOPES,
+        describe: "org | integration | app."
+      },
+      integration: {
+        field: "integration",
+        type: "string",
+        describe: "Narrow to one integration."
+      },
+      app: appOptional,
+      entry: {
+        field: "entry_id",
+        type: "string",
+        format: "uuid",
+        describe: "Narrow to one entry."
+      },
+      role: {
+        field: "role",
+        type: "enum",
+        enumValues: KNOWLEDGE_ASSET_ROLES,
+        describe: "e.g. logo-primary for the main company logo."
+      }
+    }
+  },
   "knowledge search": {
     tool: "knowledgeSearch",
     summary: "Full-text search over knowledge entries.",
@@ -17161,7 +17356,7 @@ var MCP_COMMANDS = {
         field: "expected_head_sha",
         type: "string",
         required: true,
-        describe: "PR head commit SHA observed passing via `pipeline --wait`. Merge fails closed if the PR has moved past it or that SHA has not passed."
+        describe: "PR head commit SHA observed passing via `pipeline --wait`. Merge fails closed if the PR has moved past it, that SHA has not passed, or the branch is behind its base (`scm.branch_behind`: merge the base in, wait for the new head to pass, then retry)."
       },
       method: {
         field: "method",
@@ -17231,13 +17426,6 @@ function validateKnowledgeGet(input) {
   }
   validateKnowledgeParent(input);
 }
-function validateAppIdentifier(input) {
-  const hasAppId = stringField(input, "app_id") !== void 0;
-  const hasSlug = stringField(input, "slug") !== void 0;
-  if (!hasAppId && !hasSlug) {
-    throw invalid2("Provide --app or --slug to identify the app.", "app_id");
-  }
-}
 function validateKnowledgeParent(input) {
   const scope = stringField(input, "scope");
   if (scope === "app" && stringField(input, "app_id") === void 0) {
@@ -17254,32 +17442,42 @@ function flagsWithPayloadFile(spec) {
     [spec.payload.fileFlag]: {
       field: payloadFileField(),
       type: "string",
-      describe: `Read ${spec.payload.field} from a file or fd.`
+      describe: `Read ${spec.payload.field} from a file or fd; \`-\` reads stdin.`
     }
   };
 }
 
 // packages/cli/src/cli/help.ts
 var PAD = 38;
-var AUTH_TIMEOUT_FLAG = {
+var LOGIN_FLAGS = {
+  wait: {
+    field: "wait",
+    type: "boolean",
+    describe: "Keep checking until the approval window closes, instead of returning quickly."
+  },
   timeout: {
     field: "timeout",
     type: "number",
-    describe: "Give up after this many seconds instead of the default wait."
+    describe: "Seconds to keep checking. Implies --wait."
+  },
+  loopback: {
+    field: "loopback",
+    type: "boolean",
+    describe: "Browser only, with no code fallback, waiting up to five minutes. Plain login already tries the browser first, so this is for a human who wants no code at all \u2014 and it wedges on a machine with no browser to open."
   }
 };
 var LOCAL_FLAG_HELP = {
+  "knowledge asset get": {
+    summary: "Fetch one Knowledge asset and write it into the repo, verifying it against its checksum. Address it positionally as <scope>/<topic>/<slug>, or pass --id from `knowledge asset list`. Non-org scopes need their parent (--integration / --app).",
+    flags: KNOWLEDGE_ASSET_GET_FLAGS
+  },
   run: {
-    summary: "Run a dev command with governed env injected \u2014 app mode with --app, else user mode. For a long-lived server, background it (`nohup greenlight run \u2026 > run.log 2>&1 &`) and poll the log for the `[greenlight] ready` line; stop it by signalling the greenlight process (the signal reaches the whole child tree).",
+    summary: "Run a dev command with governed env injected \u2014 app mode with --app, else user mode. For a long-lived server, put it in the background using your environment's own background or session affordance where it has one; plain shell backgrounding (`nohup \u2026 & disown`) works on some harnesses and is reaped on others, so verify the process is still alive before relying on it. Watch whichever stream you started for the `[greenlight] ready` line; stop it by signalling the greenlight process (the signal reaches the whole child tree).",
     flags: RUN_FLAGS
   },
   login: {
-    summary: "Sign in via the standalone OAuth browser flow. Blocks until the browser round-trip completes \u2014 background it or pass --timeout.",
-    flags: AUTH_TIMEOUT_FLAG
-  },
-  pair: {
-    summary: "Sign in by approving a code over your agent's MCP session. Blocks until the code is approved out of band \u2014 background it or pass --timeout.",
-    flags: AUTH_TIMEOUT_FLAG
+    summary: "Sign in. Tries your own default browser first \u2014 a browser already signed in to Greenlight finishes in seconds with nothing to type \u2014 and otherwise prints an approval URL and a code and returns right away. Approve the code \u2014 call approveCliSession({ code }) if the Greenlight MCP tools are connected, or have a person enter it at the printed URL \u2014 then run `greenlight login` again to collect the credential. Re-running resumes the same request and is always safe. --loopback is the browser-only flow for a human signing in on this machine: no code fallback, and it waits up to five minutes.",
+    flags: LOGIN_FLAGS
   },
   preview: { summary: "Emit a single-use preview URL for the app.", flags: PREVIEW_FLAGS },
   curl: {
@@ -17296,8 +17494,10 @@ var LOCAL_FLAG_HELP = {
   }
 };
 var AUTH_COMMANDS = [
-  ["login [--timeout <s>]", "Sign in via the standalone OAuth browser flow (blocks until done)."],
-  ["pair [--timeout <s>]", "Sign in by approving a code over MCP (blocks until approved)."],
+  [
+    "login [--wait] [--timeout <s>] [--loopback]",
+    "Sign in \u2014 your browser first, else a code. Returns quickly; safe to re-run."
+  ],
   ["whoami", "Show the signed-in identity."],
   ["logout", "Remove the stored CLI credentials."]
 ];
@@ -17313,6 +17513,10 @@ var LOCAL_COMMANDS = [
   ],
   ["preview --app <id> [--path <p>]", "Emit a single-use preview URL."],
   ["curl --app <id> --path <p>", "Make an authenticated request to a deployed app."],
+  [
+    "knowledge asset get <scope>/<topic>/<slug> --out <p>",
+    "Fetch a Knowledge asset (the org's real logo/icon) and write it into the repo, checksum-verified."
+  ],
   ["doctor", "Report config, auth state, and server reachability."],
   ["help [command]", "Show this help, or a command's flags."]
 ];
@@ -17343,11 +17547,10 @@ function commandHelp(name, spec) {
     lines.push(`  --${flag}${value}${required2}`.padEnd(PAD) + `  ${f.describe ?? ""}`);
   }
   if (spec.payload) {
-    const required2 = spec.payload.required ? " (required)" : "";
+    const { fileFlag, required: required2 } = spec.payload;
     const field = spec.payload.displayName ?? spec.payload.field;
-    lines.push(
-      `  ${field} from stdin or --${spec.payload.fileFlag} <path>${required2}`.padEnd(PAD) + `  ${spec.payload.describe}`
-    );
+    const source = required2 ? `stdin or --${fileFlag} <path|-> (required)` : `--${fileFlag} <path|->`;
+    lines.push(`  ${field} from ${source}`.padEnd(PAD) + `  ${spec.payload.describe}`);
   }
   return lines.join("\n");
 }
@@ -17384,145 +17587,334 @@ async function reachable(apiBase) {
   }
 }
 
+// packages/cli/src/auth-pending.ts
+var store2 = createSecretStore({ accountPrefix: "pending", fallbackFile: "cli-pending.json" });
+function loadPending(apiBase) {
+  const raw = store2.read(apiBase);
+  if (!raw) return void 0;
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.sessionId === "string" && typeof parsed.code === "string" && typeof parsed.approvalUrl === "string" && typeof parsed.expiresAt === "number") {
+      return {
+        sessionId: parsed.sessionId,
+        code: parsed.code,
+        approvalUrl: parsed.approvalUrl,
+        expiresAt: parsed.expiresAt,
+        intervalSeconds: parsed.intervalSeconds ?? 2
+      };
+    }
+  } catch {
+  }
+  return void 0;
+}
+function savePending(apiBase, pending) {
+  store2.write(apiBase, JSON.stringify(pending));
+}
+function clearPending(apiBase) {
+  store2.remove(apiBase);
+}
+
+// packages/cli/src/auth-lock.ts
+import { createHash as createHash3 } from "node:crypto";
+import {
+  closeSync as closeSync2,
+  fsyncSync as fsyncSync2,
+  mkdirSync as mkdirSync3,
+  openSync as openSync2,
+  readFileSync as readFileSync5,
+  statSync,
+  unlinkSync as unlinkSync3,
+  writeSync as writeSync2
+} from "node:fs";
+import { homedir as homedir2, hostname as hostname2 } from "node:os";
+import { join as join3 } from "node:path";
+var ACQUIRE_TIMEOUT_MS = 5e3;
+var RETRY_MS = 25;
+var authStatePath = (apiBase, extension) => join3(
+  homedir2(),
+  ".greenlight",
+  `auth-${createHash3("sha256").update(apiBase, "utf8").digest("hex").slice(0, 16)}.${extension}`
+);
+var lockPath = (apiBase) => authStatePath(apiBase, "lock");
+function ensureAuthStateDir() {
+  mkdirSync3(join3(homedir2(), ".greenlight"), { recursive: true, mode: 448 });
+}
+function holderIsGone(holder) {
+  if (holder.host !== hostname2()) return false;
+  try {
+    process.kill(holder.pid, 0);
+    return false;
+  } catch (err) {
+    return err.code === "ESRCH";
+  }
+}
+function readHolder(path) {
+  try {
+    const parsed = JSON.parse(readFileSync5(path, "utf8"));
+    if (typeof parsed.pid === "number" && typeof parsed.host === "string") {
+      return { pid: parsed.pid, host: parsed.host, at: parsed.at ?? 0 };
+    }
+  } catch {
+  }
+  return void 0;
+}
+function withAuthLock(apiBase, fn, onDiagnostic) {
+  const path = lockPath(apiBase);
+  ensureAuthStateDir();
+  const start = Date.now();
+  for (; ; ) {
+    try {
+      const fd = openSync2(path, "wx", 384);
+      try {
+        const holder = { pid: process.pid, host: hostname2(), at: Date.now() };
+        writeSync2(fd, JSON.stringify(holder));
+        fsyncSync2(fd);
+      } finally {
+        closeSync2(fd);
+      }
+      break;
+    } catch (err) {
+      if (err.code !== "EEXIST") throw err;
+      const holder = readHolder(path);
+      if (holder !== void 0 && holderIsGone(holder)) {
+        onDiagnostic?.(
+          `[greenlight] Reclaiming an auth lock left by process ${holder.pid}, which is no longer running.`
+        );
+        reclaim(path);
+        continue;
+      }
+      if (holder === void 0 && fileOlderThan(path, ACQUIRE_TIMEOUT_MS)) {
+        onDiagnostic?.("[greenlight] Reclaiming an auth lock left with no owner recorded.");
+        reclaim(path);
+        continue;
+      }
+      if (Date.now() - start > ACQUIRE_TIMEOUT_MS) {
+        throw new CliError(
+          holder !== void 0 ? `Another greenlight process (pid ${holder.pid}) is holding the sign-in lock. Wait for it to finish, then retry.` : "The sign-in lock is held by another greenlight process. Wait for it to finish, then retry.",
+          "auth.lock_unavailable",
+          3
+        );
+      }
+      sleepSync(RETRY_MS);
+    }
+  }
+  try {
+    return fn();
+  } finally {
+    try {
+      unlinkSync3(path);
+    } catch {
+    }
+  }
+}
+function fileOlderThan(path, ms) {
+  try {
+    return Date.now() - statSync(path).mtimeMs > ms;
+  } catch {
+    return false;
+  }
+}
+function reclaim(path) {
+  try {
+    unlinkSync3(path);
+  } catch {
+  }
+}
+function sleepSync(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
 // packages/cli/src/commands/logout.ts
 function cmdLogout(apiBase) {
-  clearOAuthRecord(apiBase);
+  withAuthLock(
+    apiBase,
+    () => {
+      clearOAuthRecord(apiBase);
+      clearPending(apiBase);
+    },
+    note
+  );
   note("Logged out \u2014 the CLI credential was removed from this machine.");
 }
 
-// packages/cli/src/commands/pair.ts
-import { createHash as createHash2, randomBytes as randomBytes3 } from "node:crypto";
-var POLL_INTERVAL_MS = 2e3;
-var DEFAULT_POLL_TIMEOUT_MS = 10 * 60 * 1e3;
-var sha256 = (s) => createHash2("sha256").update(s, "utf8").digest("hex");
-function genPairingCode() {
-  const alphabet = "ABCDEFGHJKMNPQRSTVWXYZ23456789";
-  const pick2 = () => Array.from(randomBytes3(4), (b) => alphabet[b % alphabet.length]).join("");
-  return `GL-${pick2()}-${pick2()}`;
+// packages/cli/src/auth-inflight.ts
+import { closeSync as closeSync3, fsyncSync as fsyncSync3, openSync as openSync3, unlinkSync as unlinkSync4, writeSync as writeSync3 } from "node:fs";
+import { hostname as hostname3 } from "node:os";
+var markerPath = (apiBase) => authStatePath(apiBase, "inflight");
+var MAX_INFLIGHT_AGE_MS = 12e4;
+function readInflight(apiBase) {
+  return readHolder(markerPath(apiBase));
 }
-async function cmdPair(apiBase, opts = {}) {
-  const timeoutMs = opts.timeoutMs ?? DEFAULT_POLL_TIMEOUT_MS;
-  const code = genPairingCode();
-  const created = await jsonRequest("POST", `${apiBase}/api/cli/sessions`, {
-    body: { pairing_code_hash: sha256(code) }
-  });
-  if (created.status !== 201) {
-    throw new CliError(`Could not start pairing (HTTP ${created.status}).`);
-  }
-  const sessionId = asRecord(created.body)["session_id"];
-  if (typeof sessionId !== "string") {
-    throw new CliError("Pairing response is malformed (missing session_id).");
-  }
-  note(
-    `
-Pairing code: ${code}
-
-Approve it from your agent (it is already signed in to Greenlight):
-  approveCliSession({ code: "${code}" })
-
-[greenlight] Waiting for approval (up to ${Math.round(timeoutMs / 1e3)}s) \u2014 this command blocks until the code is approved out of band. Run it in the background (or pass --timeout <seconds>); confirm with \`greenlight whoami\`.`
-  );
-  const deadline = Date.now() + timeoutMs;
-  const timedOut = () => Date.now() > deadline;
-  let deliveryMissed = false;
-  for (; ; ) {
-    const beforeSleep = deadline - Date.now();
-    if (beforeSleep <= 0) throw timeoutError(deliveryMissed);
-    await sleep(Math.min(POLL_INTERVAL_MS, beforeSleep));
-    const budget = deadline - Date.now();
-    if (budget <= 0) throw timeoutError(deliveryMissed);
-    let polled;
-    try {
-      polled = await jsonRequest("GET", `${apiBase}/api/cli/sessions/${sessionId}`, {
-        timeoutMs: budget
-      });
-    } catch {
-      if (timedOut()) throw timeoutError(deliveryMissed);
-      continue;
-    }
-    if (polled.status === 429) {
-      if (timedOut()) throw timeoutError(deliveryMissed);
-      continue;
-    }
-    const body = asRecord(polled.body);
-    const status = body["status"];
-    const accessToken = readString(polled.body, "access_token");
-    const clientId = readString(polled.body, "client_id");
-    if (status === "active" && accessToken && clientId) {
-      saveOAuthRecord(apiBase, {
-        client: { client_id: clientId },
-        tokens: {
-          access_token: accessToken,
-          token_type: readString(polled.body, "token_type") ?? "Bearer",
-          refresh_token: readString(polled.body, "refresh_token"),
-          expires_in: typeof body["expires_in"] === "number" ? body["expires_in"] : void 0,
-          scope: "greenlight"
-        },
-        tokensSavedAt: Date.now()
-      });
-      note(`Paired. The CLI credential is stored in ${credentialStoreLabel()}.`);
-      return;
-    }
-    if (status === "active") deliveryMissed = true;
-    if (status === "expired" || status === "revoked") {
-      throw new CliError(
-        "Pairing was not approved in time. Run `greenlight pair` again.",
-        "auth.pairing_expired",
-        3
-      );
-    }
-    if (timedOut()) throw timeoutError(deliveryMissed);
-  }
-}
-function timeoutError(deliveryMissed) {
-  return new CliError(
-    deliveryMissed ? "Pairing was approved but the one-time credential was not received. Run `greenlight pair` again." : "Timed out waiting for approval. Run `greenlight pair` again.",
-    "auth.pairing_timed_out",
-    3
-  );
-}
-
-// packages/cli/src/commands/whoami.ts
-async function cmdWhoami(apiBase) {
-  const token = await getAccessToken(apiBase);
-  const res = await jsonRequest("GET", `${apiBase}/api/cli/whoami`, { token });
-  if (res.status === 401) throw sessionExpiredError();
-  if (res.status !== 200) throw new CliError(`whoami failed (HTTP ${res.status}).`);
-  const scope = asRecord(res.body)["app_scope"];
-  emit({
-    user_email: readString(res.body, "user_email") ?? null,
-    org_id: readString(res.body, "org_id") ?? null,
-    apps_in_scope: Array.isArray(scope) ? scope.length : 0,
-    session_expires_at: readString(res.body, "expires_at") ?? null
-  });
-}
-
-// packages/cli/src/config.ts
-var BUNDLED_MCP_URL = "https://t1252-proof.greenlight.shifthq.ai/mcp";
-function resolveApiBase() {
-  const override = process.env["GREENLIGHT_API_URL"];
-  const raw = override && override.trim() !== "" ? override : BUNDLED_MCP_URL;
-  const base = raw.replace(/\/+$/, "").replace(/\/mcp$/, "");
-  if (base === "") {
-    throw new CliError(
-      "No control-plane URL is configured. Set GREENLIGHT_API_URL or use a rendered build.",
-      "cli.not_configured",
-      2
+function claimInflight(apiBase, onDiagnostic) {
+  const existing = readInflight(apiBase);
+  if (existing !== void 0) {
+    const expired = inflightExpired(existing);
+    if (!expired && !holderIsGone(existing)) return { claimed: false, holder: existing };
+    onDiagnostic?.(
+      expired ? `[greenlight] Reclaiming a sign-in attempt started ${Math.round((Date.now() - existing.at) / 1e3)}s ago by process ${existing.pid}, which is longer than a sign-in can run.` : `[greenlight] Reclaiming a sign-in attempt left by process ${existing.pid}, which is no longer running.`
     );
   }
-  return base;
+  write(apiBase, { pid: process.pid, host: hostname3(), at: Date.now() });
+  return existing === void 0 ? { claimed: true } : { claimed: true, reclaimedFrom: existing };
+}
+function releaseInflight(apiBase) {
+  const existing = readInflight(apiBase);
+  if (existing === void 0) return;
+  if (existing.pid !== process.pid || existing.host !== hostname3()) return;
+  try {
+    unlinkSync4(markerPath(apiBase));
+  } catch {
+  }
+}
+function releaseInflightUnderLock(apiBase) {
+  try {
+    withAuthLock(apiBase, () => releaseInflight(apiBase));
+  } catch {
+  }
+}
+function inflightExpired(holder) {
+  return holder.at > 0 && Date.now() - holder.at > MAX_INFLIGHT_AGE_MS;
+}
+function write(apiBase, holder) {
+  ensureAuthStateDir();
+  const fd = openSync3(markerPath(apiBase), "w", 384);
+  try {
+    writeSync3(fd, JSON.stringify(holder));
+    fsyncSync3(fd);
+  } finally {
+    closeSync3(fd);
+  }
+}
+
+// packages/cli/src/oauth/browser.ts
+import { spawn as spawn2 } from "node:child_process";
+import { accessSync, constants } from "node:fs";
+import { delimiter, join as join4 } from "node:path";
+var LAUNCH_BOUND_MS = 400;
+function openerCommand() {
+  if (process.platform === "win32") {
+    return { command: "rundll32", leadingArgs: ["url.dll,FileProtocolHandler"] };
+  }
+  if (process.platform === "darwin") return { command: "open", leadingArgs: [] };
+  return { command: "xdg-open", leadingArgs: [] };
+}
+function resolveBrowserOpener() {
+  const { command, leadingArgs } = openerCommand();
+  const path = onPath(command);
+  return path === void 0 ? void 0 : { path, leadingArgs };
+}
+function onPath(command) {
+  const candidates = /[/\\]/.test(command) ? [command] : (process.env["PATH"] ?? "").split(delimiter).filter((dir) => dir.length > 0).map((dir) => join4(dir, command));
+  const extensions = process.platform === "win32" ? (process.env["PATHEXT"] ?? ".COM;.EXE;.BAT;.CMD").split(";").filter((e) => e.length > 0) : [""];
+  for (const candidate of candidates) {
+    for (const extension of extensions) {
+      const file = `${candidate}${extension}`;
+      try {
+        accessSync(file, constants.X_OK);
+        return file;
+      } catch {
+      }
+    }
+  }
+  return void 0;
+}
+function launchBrowserOpener(opener, url2, boundMs = LAUNCH_BOUND_MS) {
+  return new Promise((resolve2) => {
+    let child;
+    let settled = false;
+    const finish = (outcome) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve2(outcome);
+    };
+    const timer = setTimeout(() => {
+      child?.unref();
+      finish("started");
+    }, boundMs);
+    if (typeof timer.unref === "function") timer.unref();
+    try {
+      child = spawn2(opener.path, [...opener.leadingArgs, url2.toString()], {
+        stdio: "ignore",
+        detached: true,
+        shell: false
+      });
+    } catch {
+      finish("unavailable");
+      return;
+    }
+    child.on("error", () => finish("unavailable"));
+    child.on("exit", (code) => finish(code === 0 ? "started" : "unavailable"));
+  });
 }
 
 // packages/cli/src/oauth/login.ts
-import { spawn as spawn2 } from "node:child_process";
-import { randomBytes as randomBytes4 } from "node:crypto";
+import { randomBytes as randomBytes3 } from "node:crypto";
 import { createServer } from "node:http";
 import { URL as URL3 } from "node:url";
 var DEFAULT_LOGIN_TIMEOUT_MS = 5 * 60 * 1e3;
-var HEARTBEAT_MS = 30 * 1e3;
+var LOOPBACK_HEARTBEAT_MS = 30 * 1e3;
 var CALLBACK_PATH = "/callback";
+var BROWSER_WINDOW_MS = 15e3;
+var BROWSER_HEARTBEAT_MS = 5 * 1e3;
 async function cmdLogin(apiBase, deps = {}, opts = {}) {
   const timeoutMs = opts.timeoutMs ?? DEFAULT_LOGIN_TIMEOUT_MS;
+  const injected = deps.openBrowser;
+  await runLoopbackFlow(apiBase, {
+    timeoutMs,
+    heartbeatMs: LOOPBACK_HEARTBEAT_MS,
+    heartbeat: "[greenlight] Still waiting for the browser sign-in\u2026",
+    releasesInflight: false,
+    open: async (url2) => {
+      process.stderr.write(
+        `
+To sign in to Greenlight, open this URL in your browser:
+${url2.toString()}
+
+[greenlight] Waiting for the browser sign-in (up to ${Math.round(timeoutMs / 1e3)}s) \u2014 this command blocks until the round-trip completes. Run it in the background if you need the terminal; confirm with \`greenlight whoami\`.
+`
+      );
+      if (injected) await injected(url2);
+      else {
+        const opener = resolveBrowserOpener();
+        if (opener !== void 0) await launchBrowserOpener(opener, url2);
+      }
+      return "started";
+    }
+  });
+}
+async function attemptBrowserSignIn(apiBase, deps) {
+  let opened = false;
+  try {
+    await runLoopbackFlow(apiBase, {
+      timeoutMs: deps.windowMs,
+      heartbeatMs: BROWSER_HEARTBEAT_MS,
+      heartbeat: "[greenlight] Still waiting for your browser\u2026",
+      releasesInflight: true,
+      open: async (url2) => {
+        const launched = await deps.launch(url2);
+        if (launched === "started") {
+          opened = true;
+          note(
+            `[greenlight] A Greenlight sign-in tab should appear in your browser. Waiting up to ${Math.round(deps.windowMs / 1e3)}s for it to finish.`
+          );
+        }
+        return launched;
+      }
+    });
+    return "signed-in";
+  } catch (err) {
+    if (!(err instanceof LaunchUnavailable) && (!(err instanceof CliError) || err.code !== "auth.login_timed_out")) {
+      const reason = err instanceof CliError ? err.code : "unexpected_error";
+      note(`[greenlight] The browser sign-in did not complete (${reason}).`);
+    }
+    return opened ? "tab-opened" : "no-tab";
+  }
+}
+var LaunchUnavailable = class extends Error {
+};
+async function runLoopbackFlow(apiBase, flow) {
+  const { timeoutMs } = flow;
   const deadlineAt = Date.now() + timeoutMs;
   let deadlineTimer;
   const deadline = new Promise((_, reject) => {
@@ -17534,65 +17926,84 @@ async function cmdLogin(apiBase, deps = {}, opts = {}) {
     if (remaining <= 0) return Promise.reject(loginTimedOut());
     return fetch(input, { ...init, signal: AbortSignal.timeout(remaining) });
   };
-  const state = randomBytes4(16).toString("base64url");
-  const loopback = await startLoopback(state, apiBase);
-  const provider = new GreenlightOAuthProvider(apiBase, loopback.redirectUri, state, {
-    staged: true
+  let abortForLaunch;
+  const launchGate = new Promise((_, reject) => {
+    abortForLaunch = reject;
   });
-  const client = provider.clientInformation();
-  if (client && !("redirect_uris" in client)) {
-    provider.invalidateCredentials("client");
-    provider.invalidateCredentials("tokens");
-  }
-  const open = deps.openBrowser ?? defaultOpenBrowser;
-  provider.onAuthorizationUrl = async (url2) => {
-    process.stderr.write(
-      `
-To sign in to Greenlight, open this URL in your browser:
-${url2.toString()}
-
-[greenlight] Waiting for the browser sign-in (up to ${Math.round(timeoutMs / 1e3)}s) \u2014 this command blocks until the round-trip completes. Run it in the background if you need the terminal; confirm with \`greenlight whoami\`.
-`
-    );
-    await open(url2);
-  };
-  const heartbeat = setInterval(
-    () => note("[greenlight] Still waiting for the browser sign-in\u2026"),
-    HEARTBEAT_MS
-  );
-  if (typeof heartbeat.unref === "function") heartbeat.unref();
+  launchGate.catch(() => {
+  });
+  const state = randomBytes3(16).toString("base64url");
+  const binding = startLoopback(state, apiBase);
+  binding.catch(() => {
+  });
   try {
-    const started = await Promise.race([
-      auth(provider, { serverUrl: apiBase, scope: OAUTH_SCOPE, fetchFn: fetchWithDeadline }),
-      deadline
-    ]);
-    if (started === "AUTHORIZED") {
-      provider.commitStaged();
-      note("Already signed in to Greenlight.");
-      return;
+    const loopback = await Promise.race([binding, deadline]);
+    const provider = new GreenlightOAuthProvider(apiBase, loopback.redirectUri, state, {
+      staged: true
+    });
+    const client = provider.clientInformation();
+    if (client && !("redirect_uris" in client)) {
+      provider.invalidateCredentials("client");
+      provider.invalidateCredentials("tokens");
     }
-    if (started !== "REDIRECT") throw new CliError(`Unexpected OAuth state: ${started}`);
-    const code = await Promise.race([loopback.waitForCode(), deadline]);
-    const finished = await Promise.race([
-      auth(provider, {
-        serverUrl: apiBase,
-        authorizationCode: code,
-        scope: OAUTH_SCOPE,
-        fetchFn: fetchWithDeadline
-      }),
-      deadline
-    ]);
-    if (finished !== "AUTHORIZED") throw new CliError("OAuth authorization did not complete.");
-    provider.commitStaged();
-    note(`Signed in to Greenlight. The CLI credential is stored in ${credentialStoreLabel()}.`);
-  } catch (err) {
-    if (!(err instanceof CliError) && Date.now() >= deadlineAt) throw loginTimedOut();
-    throw err;
+    provider.onAuthorizationUrl = async (url2) => {
+      if (await flow.open(url2) === "unavailable") abortForLaunch(new LaunchUnavailable());
+    };
+    const heartbeat = setInterval(() => note(flow.heartbeat), flow.heartbeatMs);
+    if (typeof heartbeat.unref === "function") heartbeat.unref();
+    try {
+      const started = await Promise.race([
+        auth(provider, { serverUrl: apiBase, scope: OAUTH_SCOPE, fetchFn: fetchWithDeadline }),
+        deadline,
+        launchGate
+      ]);
+      if (started === "AUTHORIZED") {
+        commitCredential(apiBase, provider, flow.releasesInflight);
+        note("Already signed in to Greenlight.");
+        return;
+      }
+      if (started !== "REDIRECT") throw new CliError(`Unexpected OAuth state: ${started}`);
+      const code = await Promise.race([loopback.waitForCode(), deadline, launchGate]);
+      const finished = await Promise.race([
+        auth(provider, {
+          serverUrl: apiBase,
+          authorizationCode: code,
+          scope: OAUTH_SCOPE,
+          fetchFn: fetchWithDeadline
+        }),
+        deadline,
+        launchGate
+      ]);
+      if (finished !== "AUTHORIZED") throw new CliError("OAuth authorization did not complete.");
+      commitCredential(apiBase, provider, flow.releasesInflight);
+      note(`Signed in to Greenlight. The CLI credential is stored in ${credentialStoreLabel()}.`);
+    } catch (err) {
+      if (err instanceof LaunchUnavailable) throw err;
+      if (!(err instanceof CliError) && Date.now() >= deadlineAt) throw loginTimedOut();
+      throw err;
+    } finally {
+      clearInterval(heartbeat);
+      loopback.close();
+    }
   } finally {
     if (deadlineTimer) clearTimeout(deadlineTimer);
-    clearInterval(heartbeat);
-    loopback.close();
+    void binding.then(
+      (l) => l.close(),
+      () => {
+      }
+    );
   }
+}
+function commitCredential(apiBase, provider, releasesInflight) {
+  withAuthLock(
+    apiBase,
+    () => {
+      provider.commitStaged();
+      clearPending(apiBase);
+      if (releasesInflight) releaseInflight(apiBase);
+    },
+    note
+  );
 }
 function loginTimedOut() {
   return new CliError(
@@ -17620,18 +18031,13 @@ async function startLoopback(expectedState, apiBase) {
     const code = url2.searchParams.get("code");
     const state = url2.searchParams.get("state");
     if (error2) {
-      sendPage(
-        res,
-        400,
-        "Sign-in failed",
-        "Your identity provider reported an error. Close this tab and run `greenlight login` again."
-      );
+      sendFailurePage(res);
       rejectCode(new CliError(`Authorization failed: ${error2}`));
     } else if (state !== expectedState) {
-      sendPage(res, 400, "Sign-in failed", "State mismatch \u2014 possible CSRF. Start over.");
+      sendFailurePage(res);
       rejectCode(new CliError("OAuth state mismatch \u2014 aborting."));
     } else if (!code) {
-      sendPage(res, 400, "Sign-in failed", "No authorization code was returned.");
+      sendFailurePage(res);
       rejectCode(new CliError("No authorization code returned."));
     } else {
       res.writeHead(302, { location: `${apiBase}/cli/done` }).end();
@@ -17651,50 +18057,493 @@ async function startLoopback(expectedState, apiBase) {
   return {
     redirectUri,
     waitForCode: () => codePromise,
-    close: () => server.close()
+    // Idempotent: the flow closes on the way out of the wait and again if the
+    // bind lost a race, and close() on a stopped server emits an 'error' nobody
+    // is listening for.
+    close: () => {
+      if (server.listening) server.close();
+    }
   };
 }
-function sendPage(res, status, title, body) {
-  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head><body style="font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;text-align:center"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(body)}</p></body></html>`;
-  res.writeHead(status, { "content-type": "text/html; charset=utf-8" }).end(html);
+var FAILURE_TITLE = "Sign-in couldn\u2019t be completed";
+var FAILURE_BODY = "Close this tab and start sign-in again in your agent.";
+var FAILURE_STYLES = `
+:root { color-scheme: light dark; --bg: #f6f7f9; --card: #ffffff; --line: #e3e6ea; --ink: #0b0d12; --muted: #4b5563; --eyebrow: #6b7280 }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0b0d12; --card: #14171f; --line: #262b36; --ink: #f4f5f7; --muted: #a1a8b5; --eyebrow: #8b93a1 }
 }
-function escapeHtml(value) {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1.25rem; background: var(--bg); color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif }
+main { max-width: 26rem; width: 100%; box-sizing: border-box; padding: 2rem; border-radius: 14px; background: var(--card); border: 1px solid var(--line); text-align: center }
+.eyebrow { margin: 0 0 .75rem; font-size: .6875rem; letter-spacing: .08em; text-transform: uppercase; color: var(--eyebrow) }
+h1 { margin: 0; font-size: 1.375rem; line-height: 1.25; font-weight: 800 }
+p.body { margin: .5rem 0 0; font-size: .875rem; line-height: 1.6; color: var(--muted) }
+`.trim();
+function sendFailurePage(res) {
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${FAILURE_TITLE} \xB7 Greenlight</title><style>${FAILURE_STYLES}</style></head><body><main><p class="eyebrow">Greenlight</p><h1>${FAILURE_TITLE}</h1><p class="body">${FAILURE_BODY}</p></main></body></html>`;
+  res.writeHead(400, { "content-type": "text/html; charset=utf-8" }).end(html);
 }
-function defaultOpenBrowser(url2) {
-  const u = url2.toString();
-  const [cmd, args] = process.platform === "win32" ? ["rundll32", ["url.dll,FileProtocolHandler", u]] : process.platform === "darwin" ? ["open", [u]] : ["xdg-open", [u]];
-  try {
-    const child = spawn2(cmd, args, { stdio: "ignore", detached: true, shell: false });
-    child.on("error", () => {
-    });
-    child.unref();
-  } catch {
+
+// packages/cli/src/commands/sign-in-pairing.ts
+import { createHash as createHash4, randomBytes as randomBytes4 } from "node:crypto";
+var RESUME_POLL_MS = 4e4;
+var FULL_WAIT_MS = 10 * 60 * 1e3;
+var HEARTBEAT_MS = 1e4;
+var sha256 = (s) => createHash4("sha256").update(s, "utf8").digest("hex");
+var CODE_ALPHABET = "ABCDEFGHJKMNPQRSTVWXYZ23456789";
+var CODE_LENGTH = 6;
+function pickSymbol() {
+  const limit2 = 256 - 256 % CODE_ALPHABET.length;
+  for (; ; ) {
+    const [byte] = randomBytes4(1);
+    if (byte === void 0 || byte >= limit2) continue;
+    const symbol = CODE_ALPHABET[byte % CODE_ALPHABET.length];
+    if (symbol !== void 0) return symbol;
   }
+}
+function genPairingCode() {
+  return Array.from({ length: CODE_LENGTH }, pickSymbol).join("");
+}
+function hasCredential(apiBase) {
+  return Boolean(loadOAuthRecord(apiBase).tokens?.access_token);
+}
+function clearThisHandshake(apiBase, pending) {
+  withAuthLock(
+    apiBase,
+    () => {
+      if (loadPending(apiBase)?.sessionId === pending.sessionId) clearPending(apiBase);
+    },
+    note
+  );
+}
+function approvalPendingError(pending, browserOpened) {
+  const err = new CliError(
+    `Waiting for approval of code ${pending.code}.`,
+    "auth.approval_pending",
+    4
+  );
+  err.details = {
+    code: pending.code,
+    approval_url: pending.approvalUrl,
+    next_steps: [
+      `If the Greenlight MCP tools are connected, call approveCliSession({ code: "${pending.code}" }).`,
+      ...browserOpened ? [
+        "A Greenlight sign-in tab may already be waiting on the person\u2019s screen. It can no longer finish this sign-in \u2014 the code below is the way through."
+      ] : [],
+      "If not, give the person this URL and this code:",
+      pending.approvalUrl,
+      `Type: ${pending.code}`,
+      "Then run `greenlight login` again in the foreground."
+    ].join("\n")
+  };
+  return err;
+}
+async function createPairingHandshake(apiBase, opts) {
+  const code = genPairingCode();
+  const created = await jsonRequest("POST", `${apiBase}/api/cli/sessions`, {
+    body: { pairing_code_hash: sha256(code), cli_version: CLI_VERSION }
+  });
+  if (created.status !== 201) {
+    throw new CliError(`Could not start sign-in (HTTP ${created.status}).`);
+  }
+  const body = asRecord(created.body);
+  const sessionId = readString(created.body, "session_id");
+  if (sessionId === void 0) {
+    throw new CliError("Sign-in response is malformed (missing session_id).");
+  }
+  const expiresIn = typeof body["expires_in"] === "number" ? body["expires_in"] : 600;
+  const pending = {
+    sessionId,
+    code,
+    approvalUrl: `${apiBase.replace(/\/+$/, "")}/cli/approve`,
+    expiresAt: Date.now() + expiresIn * 1e3,
+    intervalSeconds: typeof body["interval"] === "number" ? body["interval"] : 2
+  };
+  const settled = withAuthLock(
+    apiBase,
+    () => {
+      releaseInflight(apiBase);
+      if (hasCredential(apiBase)) return "already-signed-in";
+      const peer = loadPending(apiBase);
+      if (peer !== void 0 && peer.expiresAt > Date.now()) {
+        return { pending: peer, adopted: true };
+      }
+      savePending(apiBase, pending);
+      return { pending, adopted: false };
+    },
+    note
+  );
+  if (settled === "already-signed-in") {
+    note("Already signed in \u2014 another `greenlight login` completed the sign-in.");
+    return;
+  }
+  const live = settled.pending;
+  if (opts.browserOpened) {
+    note("[greenlight] The sign-in tab did not finish in time. Use this code instead.");
+  }
+  note(`
+Approve this sign-in at:
+${live.approvalUrl}
+Code: ${live.code}
+`);
+  throw approvalPendingError(live, opts.browserOpened);
+}
+async function resumePairing(apiBase, pending, budgetMs) {
+  const deadline = Math.min(Date.now() + budgetMs, pending.expiresAt);
+  let intervalMs = pending.intervalSeconds * 1e3;
+  let deliveryMissed = false;
+  note(
+    `[greenlight] Checking whether code ${pending.code} has been approved (up to ${Math.max(1, Math.round((deadline - Date.now()) / 1e3))}s).`
+  );
+  let lastHeartbeat = Date.now();
+  const heartbeat = () => {
+    if (Date.now() - lastHeartbeat < HEARTBEAT_MS) return;
+    lastHeartbeat = Date.now();
+    note(
+      `[greenlight] Still waiting for approval of ${pending.code} (${Math.max(0, Math.round((deadline - Date.now()) / 1e3))}s left).`
+    );
+  };
+  const waitForNextPoll = async () => {
+    const left = deadline - Date.now();
+    await sleep(Math.max(0, Math.min(intervalMs, left)));
+    return intervalMs < left;
+  };
+  for (; ; ) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) break;
+    let polled;
+    try {
+      polled = await jsonRequest("GET", `${apiBase}/api/cli/sessions/${pending.sessionId}`, {
+        timeoutMs: remaining
+      });
+    } catch {
+      heartbeat();
+      if (!await waitForNextPoll()) break;
+      continue;
+    }
+    if (polled.status === 429) {
+      intervalMs = Math.max(intervalMs, raisedInterval(polled) * 1e3);
+      const peerWon = withAuthLock(
+        apiBase,
+        () => {
+          const stored = loadPending(apiBase);
+          if (stored?.sessionId !== pending.sessionId) return hasCredential(apiBase);
+          savePending(apiBase, { ...stored, intervalSeconds: intervalMs / 1e3 });
+          return false;
+        },
+        note
+      );
+      if (peerWon) {
+        note("Already signed in \u2014 another `greenlight login` completed this handshake.");
+        return;
+      }
+      heartbeat();
+      if (!await waitForNextPoll()) break;
+      continue;
+    }
+    const body = asRecord(polled.body);
+    const signal = readString(polled.body, "error") ?? readString(polled.body, "status");
+    const accessToken = readString(polled.body, "access_token");
+    const clientId = readString(polled.body, "client_id");
+    if (accessToken !== void 0 && clientId !== void 0) {
+      commitPairedCredential(apiBase, polled, accessToken, clientId);
+      note(`Signed in. The CLI credential is stored in ${credentialStoreLabel()}.`);
+      return;
+    }
+    if (polled.status === 404) {
+      clearThisHandshake(apiBase, pending);
+      throw new CliError(
+        "That sign-in request no longer exists on the server. Run `greenlight login` again for a fresh code.",
+        "auth.pairing_expired",
+        3
+      );
+    }
+    if (signal === "expired_token" || signal === "access_denied" || signal === "expired" || signal === "revoked") {
+      clearThisHandshake(apiBase, pending);
+      throw new CliError(
+        "That sign-in request is no longer valid. Run `greenlight login` again for a fresh code.",
+        "auth.pairing_expired",
+        3
+      );
+    }
+    if (signal === "active" || body["status"] === "active") {
+      deliveryMissed = true;
+      const peerWon = withAuthLock(
+        apiBase,
+        () => {
+          if (!hasCredential(apiBase)) return false;
+          clearPending(apiBase);
+          return true;
+        },
+        note
+      );
+      if (peerWon) {
+        note("Already signed in \u2014 another `greenlight login` completed this handshake.");
+        return;
+      }
+    }
+    heartbeat();
+    if (!await waitForNextPoll()) break;
+  }
+  if (deliveryMissed) {
+    const settled = withAuthLock(
+      apiBase,
+      () => {
+        const won = hasCredential(apiBase);
+        clearPending(apiBase);
+        return won ? "committed" : "lost";
+      },
+      note
+    );
+    if (settled === "committed") {
+      note("Already signed in \u2014 another `greenlight login` completed this handshake.");
+      return;
+    }
+    throw new CliError(
+      "That sign-in was approved but its one-time credential did not arrive. Run `greenlight login` again for a fresh code.",
+      "auth.pairing_timed_out",
+      3
+    );
+  }
+  if (deadline >= pending.expiresAt) {
+    clearThisHandshake(apiBase, pending);
+    throw new CliError(
+      "That sign-in request expired before it was approved. Run `greenlight login` again for a fresh code.",
+      "auth.pairing_expired",
+      3
+    );
+  }
+  throw approvalPendingError(pending, false);
+}
+function commitPairedCredential(apiBase, polled, accessToken, clientId) {
+  const body = asRecord(polled.body);
+  withAuthLock(
+    apiBase,
+    () => {
+      saveOAuthRecord(apiBase, {
+        client: { client_id: clientId },
+        tokens: {
+          access_token: accessToken,
+          token_type: readString(polled.body, "token_type") ?? "Bearer",
+          refresh_token: readString(polled.body, "refresh_token"),
+          expires_in: typeof body["expires_in"] === "number" ? body["expires_in"] : void 0,
+          scope: "greenlight"
+        },
+        tokensSavedAt: Date.now()
+      });
+      clearPending(apiBase);
+    },
+    note
+  );
+}
+function raisedInterval(polled) {
+  const details = asRecord(asRecord(polled.body)["details"]);
+  const interval = details["interval"];
+  return typeof interval === "number" && interval > 0 ? interval : 5;
+}
+
+// packages/cli/src/commands/sign-in-browser.ts
+var OBSERVE_POLL_MS = 500;
+var OBSERVE_HEARTBEAT_MS = 1e4;
+async function signInWithBrowserFirst(apiBase, deps = {}, resumeBudgetMs = RESUME_POLL_MS) {
+  let opening = withAuthLock(apiBase, () => inspect(apiBase, false), note);
+  if (opening.kind === "observe") {
+    opening = await waitOutHolder(apiBase, opening.holder, deps.holderWaitMs ?? RESUME_POLL_MS);
+  }
+  if (opening.kind === "signed-in") {
+    note("Already signed in \u2014 another `greenlight login` completed the sign-in.");
+    return;
+  }
+  if (opening.kind === "resume") {
+    await resumePairing(apiBase, opening.pending, resumeBudgetMs);
+    return;
+  }
+  try {
+    await mint(apiBase, deps, opening.browser);
+  } finally {
+    releaseInflightUnderLock(apiBase);
+  }
+}
+function inspect(apiBase, afterObserving) {
+  if (hasCredential(apiBase)) return { kind: "signed-in" };
+  const pending = loadPending(apiBase);
+  if (pending !== void 0 && pending.expiresAt > Date.now()) {
+    return { kind: "resume", pending };
+  }
+  const claim = claimInflight(apiBase, note);
+  if (!claim.claimed) return { kind: "observe", holder: claim.holder };
+  return { kind: "claimed", browser: claim.reclaimedFrom !== void 0 || !afterObserving };
+}
+async function waitOutHolder(apiBase, holder, budgetMs) {
+  note(
+    `[greenlight] Another greenlight login (pid ${holder.pid}) is signing in for this control plane. Waiting up to ${Math.round(budgetMs / 1e3)}s for it to finish.`
+  );
+  const deadline = Date.now() + budgetMs;
+  let lastHeartbeat = Date.now();
+  for (; ; ) {
+    await sleep(Math.min(OBSERVE_POLL_MS, Math.max(0, deadline - Date.now())));
+    const seen = withAuthLock(apiBase, () => inspect(apiBase, true), note);
+    if (seen.kind !== "observe") return seen;
+    if (Date.now() >= deadline) break;
+    if (Date.now() - lastHeartbeat >= OBSERVE_HEARTBEAT_MS) {
+      lastHeartbeat = Date.now();
+      note(
+        `[greenlight] Still waiting for the sign-in already in progress (${Math.max(0, Math.round((deadline - Date.now()) / 1e3))}s left).`
+      );
+    }
+  }
+  throw new CliError(
+    "Another `greenlight login` is still signing in for this control plane. Run `greenlight login` again.",
+    "auth.login_timed_out",
+    3
+  );
+}
+async function mint(apiBase, deps, browser) {
+  const opener = browser ? (deps.resolveOpener ?? resolveBrowserOpener)() : void 0;
+  if (opener === void 0) {
+    await createPairingHandshake(apiBase, { browserOpened: false });
+    return;
+  }
+  const launch = deps.launchOpener ?? launchBrowserOpener;
+  const attempt = await attemptBrowserSignIn(apiBase, {
+    windowMs: deps.browserWindowMs ?? BROWSER_WINDOW_MS,
+    launch: (url2) => launch(opener, url2)
+  });
+  if (attempt === "signed-in") return;
+  await createPairingHandshake(apiBase, { browserOpened: attempt === "tab-opened" });
+}
+
+// packages/cli/src/commands/sign-in.ts
+async function storedCredential(apiBase) {
+  const judged = loadOAuthRecord(apiBase).tokens?.access_token;
+  if (judged === void 0) return "none";
+  try {
+    await getAccessToken(apiBase);
+    return "usable";
+  } catch (err) {
+    if (!(err instanceof CliError) || err.code !== "auth.session_expired") return "unreachable";
+    return withAuthLock(
+      apiBase,
+      () => {
+        const current = loadOAuthRecord(apiBase).tokens?.access_token;
+        if (current !== void 0 && current !== judged) return "usable";
+        clearOAuthRecord(apiBase);
+        clearPending(apiBase);
+        return "dead";
+      },
+      note
+    );
+  }
+}
+async function cmdSignIn(apiBase, opts = {}, deps = {}) {
+  const credential = await storedCredential(apiBase);
+  if (credential === "usable") {
+    withAuthLock(apiBase, () => clearPending(apiBase), note);
+    note("Already signed in. Run `greenlight whoami` to confirm, or `greenlight logout` first.");
+    return;
+  }
+  if (credential === "unreachable") {
+    throw new CliError(
+      "Could not reach Greenlight to check the stored session. Check your connection and run `greenlight login` again."
+    );
+  }
+  if (credential === "dead") {
+    note("The stored session has expired or been revoked. Starting a new sign-in.");
+  }
+  const budgetMs = opts.timeoutMs !== void 0 ? opts.timeoutMs : opts.wait === true ? FULL_WAIT_MS : void 0;
+  const existing = withAuthLock(
+    apiBase,
+    () => {
+      const pending = loadPending(apiBase);
+      if (pending !== void 0 && pending.expiresAt <= Date.now()) {
+        clearPending(apiBase);
+        return void 0;
+      }
+      return pending;
+    },
+    note
+  );
+  if (existing === void 0) {
+    await signInWithBrowserFirst(apiBase, deps, budgetMs ?? RESUME_POLL_MS);
+    return;
+  }
+  await resumePairing(apiBase, existing, budgetMs ?? RESUME_POLL_MS);
+}
+
+// packages/cli/src/commands/whoami.ts
+async function cmdWhoami(apiBase) {
+  const token = await getAccessToken(apiBase);
+  const res = await jsonRequest("GET", `${apiBase}/api/cli/whoami`, { token });
+  if (res.status === 401) throw sessionExpiredError();
+  if (res.status !== 200) throw new CliError(`whoami failed (HTTP ${res.status}).`);
+  const scope = asRecord(res.body)["app_scope"];
+  emit({
+    user_email: readString(res.body, "user_email") ?? null,
+    org_id: readString(res.body, "org_id") ?? null,
+    apps_in_scope: Array.isArray(scope) ? scope.length : 0,
+    session_expires_at: readString(res.body, "expires_at") ?? null
+  });
+}
+
+// packages/cli/src/config.ts
+var BUNDLED_MCP_URL = "https://dev-ptr.greenlight.shifthq.ai/mcp";
+function resolveApiBase() {
+  const override = process.env["GREENLIGHT_API_URL"];
+  const raw = override && override.trim() !== "" ? override : BUNDLED_MCP_URL;
+  const base = raw.replace(/\/+$/, "").replace(/\/mcp$/, "");
+  if (base === "") {
+    throw new CliError(
+      "No control-plane URL is configured. Set GREENLIGHT_API_URL or use a rendered build.",
+      "cli.not_configured",
+      2
+    );
+  }
+  return base;
 }
 
 // packages/cli/src/index.ts
-var SINGLE_WORD_AUTH = /* @__PURE__ */ new Set(["login", "pair", "whoami", "logout"]);
-function parseTimeoutMs(rest, command) {
-  const idx = rest.indexOf("--timeout");
-  const leftover = rest.filter((_, i) => i !== idx && (idx === -1 || i !== idx + 1));
-  if (leftover.length > 0) {
+var SINGLE_WORD_AUTH = /* @__PURE__ */ new Set(["login", "whoami", "logout"]);
+var pairRemovedError = () => new CliError(
+  "`greenlight pair` has been removed. Run `greenlight login` instead \u2014 it prints a code and returns right away.",
+  "validation.unknown_command",
+  2
+);
+function parseLoginArgs(rest) {
+  const out = { loopback: false, wait: false, timeoutMs: void 0 };
+  let waitRequested = false;
+  for (let i = 0; i < rest.length; i += 1) {
+    const arg = rest[i];
+    if (arg === "--wait") {
+      out.wait = true;
+      waitRequested = true;
+    } else if (arg === "--loopback") out.loopback = true;
+    else if (arg === "--timeout") {
+      const seconds = Number(rest[i + 1]);
+      if (!Number.isFinite(seconds) || seconds <= 0) {
+        throw new CliError(
+          "--timeout expects a positive number of seconds.",
+          "validation.body_invalid",
+          2
+        );
+      }
+      out.timeoutMs = seconds * 1e3;
+      out.wait = true;
+      i += 1;
+    } else {
+      throw new CliError(
+        `Unknown login argument: ${arg}. Accepted: --wait, --timeout <seconds>, --loopback.`,
+        "validation.unknown_flag",
+        2
+      );
+    }
+  }
+  if (out.loopback && waitRequested) {
     throw new CliError(
-      `Unknown ${command} argument: ${leftover[0]}. Only --timeout <seconds> is accepted.`,
+      "--wait does not apply to --loopback, which waits for a browser round-trip rather than a code approval. Use --loopback --timeout <seconds> to bound it.",
       "validation.unknown_flag",
       2
     );
   }
-  if (idx === -1) return void 0;
-  const seconds = Number(rest[idx + 1]);
-  if (!Number.isFinite(seconds) || seconds <= 0) {
-    throw new CliError(
-      "--timeout expects a positive number of seconds.",
-      "validation.body_invalid",
-      2
-    );
-  }
-  return seconds * 1e3;
+  return out;
 }
 function parseRunArgs(after) {
   const opts = { env: {} };
@@ -17742,13 +18591,18 @@ function parseRunArgs(after) {
   }
   return { opts, dev: after.slice(i) };
 }
+var LOCAL_COMMAND_NAMES = /* @__PURE__ */ new Set(["repo clone", "repo refresh", "knowledge asset get"]);
 function resolveCommand(tokens) {
   const first = tokens[0] ?? "";
-  const second = tokens[1];
-  const twoWord = second !== void 0 && !second.startsWith("--") ? `${first} ${second}` : void 0;
-  const localTwoWord = twoWord === "repo clone" || twoWord === "repo refresh";
-  const command = twoWord && (MCP_COMMANDS[twoWord] || localTwoWord) ? twoWord : first;
-  return { command, rest: tokens.slice(command.split(" ").length) };
+  for (const width of [3, 2]) {
+    const words = tokens.slice(0, width);
+    if (words.length < width || words.some((w) => w.startsWith("-"))) continue;
+    const candidate = words.join(" ");
+    if (MCP_COMMANDS[candidate] || LOCAL_COMMAND_NAMES.has(candidate)) {
+      return { command: candidate, rest: tokens.slice(width) };
+    }
+  }
+  return { command: first, rest: tokens.slice(1) };
 }
 async function main(argv) {
   const cmdIdx = argv.findIndex((a) => !a.startsWith("-"));
@@ -17772,6 +18626,7 @@ async function main(argv) {
     return 0;
   }
   const { command, rest } = resolveCommand(first === "help" ? args.slice(1) : args);
+  if (command === "pair") throw pairRemovedError();
   if (first === "help" || rest.includes("--help") || rest.includes("-h")) {
     process.stdout.write(`${resolveCommandHelp(command) ?? helpText()}
 `);
@@ -17779,11 +18634,21 @@ async function main(argv) {
   }
   if (SINGLE_WORD_AUTH.has(command)) {
     const apiBase = resolveApiBase();
-    if (command === "login")
-      await cmdLogin(apiBase, {}, { timeoutMs: parseTimeoutMs(rest, "login") });
-    else if (command === "pair")
-      await cmdPair(apiBase, { timeoutMs: parseTimeoutMs(rest, "pair") });
-    else if (command === "whoami") await cmdWhoami(apiBase);
+    if (command === "login") {
+      const login = parseLoginArgs(rest);
+      if (login.loopback) {
+        await cmdLogin(
+          apiBase,
+          {},
+          { ...login.timeoutMs !== void 0 ? { timeoutMs: login.timeoutMs } : {} }
+        );
+      } else {
+        await cmdSignIn(apiBase, {
+          wait: login.wait,
+          ...login.timeoutMs !== void 0 ? { timeoutMs: login.timeoutMs } : {}
+        });
+      }
+    } else if (command === "whoami") await cmdWhoami(apiBase);
     else cmdLogout(apiBase);
     return 0;
   }
@@ -17792,6 +18657,8 @@ async function main(argv) {
   if (command === "repo refresh") return cmdRepoRefresh(resolveApiBase(), rest, global);
   if (command === "preview") return cmdPreview(resolveApiBase(), rest, global);
   if (command === "curl") return cmdCurl(resolveApiBase(), rest, global);
+  if (command === "knowledge asset get")
+    return cmdKnowledgeAssetGet(resolveApiBase(), rest, global);
   const spec = MCP_COMMANDS[command];
   if (spec) return runMcpCommand(resolveApiBase(), spec, rest, global);
   note(helpText());
@@ -17814,9 +18681,14 @@ if (isMain) {
       return;
     }
     note(err instanceof Error ? err.stack ?? err.message : String(err));
+    renderCliError(
+      new CliError(err instanceof Error ? err.message : String(err), "cli.unexpected_error", 1)
+    );
     exitFlushed(1);
   });
 }
 export {
-  main
+  LOCAL_COMMAND_NAMES,
+  main,
+  parseLoginArgs
 };
